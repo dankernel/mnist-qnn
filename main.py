@@ -66,7 +66,7 @@ def main(inp):
     # Output
     print(np.argmax(temp))
 
-inp = cv2.imread('test_image/8.png', cv2.IMREAD_GRAYSCALE)
+inp = cv2.imread('test_image/4.png', cv2.IMREAD_GRAYSCALE)
 main(inp)
 
 
