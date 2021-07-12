@@ -8,6 +8,10 @@ np.set_printoptions(threshold=sys.maxsize)
 
 NUMBER_LINE = '├━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┤'
 
+# Option 
+use_ReLU = True
+use_zp = True
+
 class Inference(Enum):
     FP32 = 1
     INT8 = 2
@@ -76,6 +80,7 @@ def quantization(path: str, num_bits: int=8):
         print_debug('L1', temp_min, temp_max, scale)
 
     zero_point = 0 -(temp_min // scale)
+    zero_point = zero_point.astype(np.uint8)
 
     """
     Encoding zero point
@@ -122,22 +127,37 @@ def inference(path: str, inference_mode=None):
         ndarray_to_bin(quantized_fc2w, './FC2.bin')
         ndarray_to_bin(quantized_fc3w, './FC3.bin')
         
-        # zero point calibration
-        fc1w = quantized_fc1w - fc1w_zp
-        fc2w = quantized_fc2w - fc2w_zp
-        fc3w = quantized_fc3w - fc3w_zp
+        # zero point calibration (decoding)
+        fc1w = quantized_fc1w
+        fc2w = quantized_fc2w
+        fc3w = quantized_fc3w
+
+        if use_zp:
+            fc1w -= fc1w_zp
+            fc2w -= fc2w_zp
+            fc3w -= fc3w_zp
+
 
     temp = np.matmul(inp, fc1w)
+    print('FC1 Output :', temp.shape, temp.dtype)
     # temp = temp * fc1w_scale
-    temp = np.maximum(0, temp)
+    if use_ReLU:
+        temp = np.maximum(0, temp)
 
     temp = np.matmul(temp, fc2w)
+    print('FC2 Output :', temp.shape, temp.dtype)
     # temp = temp * fc2w_scale
-    temp = np.maximum(0, temp)
+    if use_ReLU:
+        temp = np.maximum(0, temp)
     
     temp = np.matmul(temp, fc3w)
+    print('FC3 Output :', temp.shape, temp.dtype)
     # temp = temp * fc3w_scale
-    temp = temp * fc1w_scale * fc2w_scale * fc3w_scale
+    
+    print(temp)
+
+    if use_ReLU:
+        temp = temp * fc1w_scale * fc2w_scale * fc3w_scale
 
     print(temp)
 
