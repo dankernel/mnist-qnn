@@ -1,0 +1,30 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+FC1_BIN_H	out_hpp/fc1.hpp	2;"	d
+FC1_bin	out_hpp/fc1.hpp	/^static const unsigned char FC1_bin[] = {$/;"	v
+FC2_BIN_H	out_hpp/fc2.hpp	2;"	d
+FC2_bin	out_hpp/fc2.hpp	/^static const unsigned char FC2_bin[] = {$/;"	v
+FC3_BIN_H	out_hpp/fc3.hpp	2;"	d
+FC3_bin	out_hpp/fc3.hpp	/^static const unsigned char FC3_bin[] = {$/;"	v
+FP32	quantization.py	/^    FP32 = 1$/;"	v	class:Inference
+IMAGE_BIN_H	out_hpp/image.hpp	2;"	d
+INT8	quantization.py	/^    INT8 = 2$/;"	v	class:Inference
+Inference	quantization.py	/^class Inference(Enum):$/;"	c
+NUMBER_LINE	quantization.py	/^NUMBER_LINE = '├━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┤'$/;"	v
+debug_option	quantization.py	/^debug_option = {'print_all_layer': True}$/;"	v
+image_bin	out_hpp/image.hpp	/^static const unsigned char image_bin[] = {$/;"	v
+inference	quantization.py	/^def inference(path: str, inference_mode=None):$/;"	f
+inp	image_to_bin.py	/^inp = cv2.imread('test_image\/0.png', cv2.IMREAD_GRAYSCALE)$/;"	v
+inp	image_to_bin.py	/^inp = inp.reshape(-1)$/;"	v
+inp	main.py	/^inp = cv2.imread('test_image\/4.png', cv2.IMREAD_GRAYSCALE)$/;"	v
+main	main.py	/^def main(inp):$/;"	f
+ndarray_to_bin	qnn_utils.py	/^def ndarray_to_bin(ndarray, out_path: str):$/;"	f
+print_debug	quantization.py	/^def print_debug(layer: str, min: float, max: float, scale: float):$/;"	f
+quantization	quantization.py	/^def quantization(path: str, num_bits: int=8):$/;"	f
+ret	quantization.py	/^    ret = inference('test_image\/0.png', inference_mode=Inference.INT8)$/;"	v
+softmax	quantization.py	/^def softmax(x):$/;"	f
+use_zp	quantization.py	/^use_zp = True$/;"	v

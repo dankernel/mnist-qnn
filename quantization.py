@@ -3,13 +3,13 @@ import sys
 import numpy as np
 import cv2
 from enum import Enum
+import qnn_utils
 
 np.set_printoptions(threshold=sys.maxsize)
 
 NUMBER_LINE = '├━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┤'
 
 # Option 
-use_ReLU = True
 use_zp = True
 
 class Inference(Enum):
@@ -92,25 +92,6 @@ def quantization(path: str, num_bits: int=8):
     quantized_tensor = quantized_tensor.astype(np.uint8)
     return tensor, quantized_tensor, scale, zero_point
 
-def ndarray_to_bin(ndarray, out_path: str):
-    """
-    ndarray to bin file
-    (4byte) dim
-    (4byte) shape x dim
-
-    :param ndarray: target numpy ndarrat
-    :param str out_path: output path
-    :return: None
-    """
-
-    with open(out_path, 'wb') as file:
-        dim = len(ndarray.shape)
-        file.write(dim.to_bytes(4, byteorder='little', signed=True))
-        for s in range(dim):
-            size = ndarray.shape[s]
-            file.write(size.to_bytes(4, byteorder='little', signed=True))
-        file.write(ndarray.tobytes())
- 
 def inference(path: str, inference_mode=None):
 
     inp = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
@@ -123,41 +104,33 @@ def inference(path: str, inference_mode=None):
 
     if inference_mode == Inference.INT8:
 
-        ndarray_to_bin(quantized_fc1w, './FC1.bin')
-        ndarray_to_bin(quantized_fc2w, './FC2.bin')
-        ndarray_to_bin(quantized_fc3w, './FC3.bin')
+        """
+        qnn_utils.ndarray_to_bin(quantized_fc1w, './bin/FC1.bin')
+        qnn_utils.ndarray_to_bin(quantized_fc2w, './bin/FC2.bin')
+        qnn_utils.ndarray_to_bin(quantized_fc3w, './bin/FC3.bin')
+        """
         
         # zero point calibration (decoding)
-        fc1w = quantized_fc1w
-        fc2w = quantized_fc2w
-        fc3w = quantized_fc3w
-
-        if use_zp:
-            fc1w -= fc1w_zp
-            fc2w -= fc2w_zp
-            fc3w -= fc3w_zp
-
+        fc1w = quantized_fc1w - fc1w_zp
+        fc2w = quantized_fc2w - fc2w_zp
+        fc3w = quantized_fc3w - fc3w_zp
 
     temp = np.matmul(inp, fc1w)
     print('FC1 Output :', temp.shape, temp.dtype)
     # temp = temp * fc1w_scale
-    if use_ReLU:
-        temp = np.maximum(0, temp)
+    temp = np.maximum(0, temp)
 
     temp = np.matmul(temp, fc2w)
     print('FC2 Output :', temp.shape, temp.dtype)
     # temp = temp * fc2w_scale
-    if use_ReLU:
-        temp = np.maximum(0, temp)
+    temp = np.maximum(0, temp)
     
     temp = np.matmul(temp, fc3w)
     print('FC3 Output :', temp.shape, temp.dtype)
     # temp = temp * fc3w_scale
     
     print(temp)
-
-    if use_ReLU:
-        temp = temp * fc1w_scale * fc2w_scale * fc3w_scale
+    temp = temp * fc1w_scale * fc2w_scale * fc3w_scale
 
     print(temp)
 
@@ -172,6 +145,7 @@ def inference(path: str, inference_mode=None):
 
 if __name__ == '__main__':
 
-    ret = inference('test_image/0.png', inference_mode=Inference.INT8)
+    # ret = inference('test_image/0.png', inference_mode=Inference.INT8) 
+    ret = inference('test_image/0.png', inference_mode=Inference.FP32) 
     print(ret)
 
