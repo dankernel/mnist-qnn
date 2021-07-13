@@ -10,6 +10,7 @@ np.set_printoptions(threshold=sys.maxsize)
 NUMBER_LINE = '├━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┤'
 
 # Option 
+use_ReLU = True
 use_zp = True
 
 class Inference(Enum):
@@ -109,11 +110,15 @@ def inference(path: str, inference_mode=None):
         qnn_utils.ndarray_to_bin(quantized_fc2w, './bin/FC2.bin')
         qnn_utils.ndarray_to_bin(quantized_fc3w, './bin/FC3.bin')
         """
-        
         # zero point calibration (decoding)
-        fc1w = quantized_fc1w - fc1w_zp
-        fc2w = quantized_fc2w - fc2w_zp
-        fc3w = quantized_fc3w - fc3w_zp
+        fc1w = quantized_fc1w
+        fc2w = quantized_fc2w
+        fc3w = quantized_fc3w
+
+        if use_zp:
+            fc1w -= fc1w_zp
+            fc2w -= fc2w_zp
+            fc3w -= fc3w_zp
 
     temp = np.matmul(inp, fc1w)
     print('FC1 Output :', temp.shape, temp.dtype)
@@ -130,6 +135,7 @@ def inference(path: str, inference_mode=None):
     # temp = temp * fc3w_scale
     
     print(temp)
+    
     temp = temp * fc1w_scale * fc2w_scale * fc3w_scale
 
     print(temp)
