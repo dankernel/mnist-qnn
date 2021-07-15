@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 from enum import Enum
 import qnn_utils
+from termcolor import colored
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -81,7 +82,7 @@ def quantization(path: str, num_bits: int=8):
         print_debug('L1', temp_min, temp_max, scale)
 
     zero_point = 0 -(temp_min // scale)
-    zero_point = zero_point.astype(np.uint8)
+    zero_point = zero_point.astype(np.int8)
 
     """
     Encoding zero point
@@ -90,18 +91,29 @@ def quantization(path: str, num_bits: int=8):
     [ 2,  4,  5] -> -2(-min) -> [0, 2, 3]
     """
     quantized_tensor = (tensor // scale) + zero_point
-    quantized_tensor = quantized_tensor.astype(np.uint8)
+    quantized_tensor = quantized_tensor.astype(np.int8)
     return tensor, quantized_tensor, scale, zero_point
 
 def inference(path: str, inference_mode=None):
 
     inp = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     inp = inp.reshape(-1)
+    inp = inp.astype(np.int32)
 
     # Load tensor
     fc1w, quantized_fc1w, fc1w_scale, fc1w_zp = quantization('mnist_dkdk_FP32_20170708_v1/FC1.npy')
     fc2w, quantized_fc2w, fc2w_scale, fc2w_zp = quantization('mnist_dkdk_FP32_20170708_v1/FC2.npy')
     fc3w, quantized_fc3w, fc3w_scale, fc3w_zp = quantization('mnist_dkdk_FP32_20170708_v1/FC3.npy')
+
+    if __debug__:
+        print('fc1w (FP32)   :', colored(fc1w[0][:5], 'red'))
+        print('fc1w (INT8)   :', colored(quantized_fc1w[0][:5], 'red'))
+        print('fc1w scale    :', colored(fc1w_scale, 'red'))
+        print('fc2w scale    :', colored(fc2w_scale, 'red'))
+        print('fc3w scale    :', colored(fc3w_scale, 'red'))
+        print('fc1w zp       :', colored(fc1w_zp, 'red'))
+        print('fc1w - zp     :', colored((quantized_fc1w[0][:5] - fc1w_zp), 'red'))
+        print('fc1w - zp * s :', colored((quantized_fc1w[0][:5] - fc1w_zp) * fc1w_scale, 'red'))
 
     if inference_mode == Inference.INT8:
 
@@ -120,24 +132,31 @@ def inference(path: str, inference_mode=None):
             fc2w -= fc2w_zp
             fc3w -= fc3w_zp
 
+    # print(colored(fc1w[0][:5] * fc1w_scale, 'red'))
+
     temp = np.matmul(inp, fc1w)
     print('FC1 Output :', temp.shape, temp.dtype)
-    # temp = temp * fc1w_scale
+    temp = temp * fc1w_scale
+    temp = temp.astype(int)
     temp = np.maximum(0, temp)
+    #temp = np.minimum(127 // fc1w_scale, temp)
+    # temp = temp * fc1w_scale
 
     temp = np.matmul(temp, fc2w)
     print('FC2 Output :', temp.shape, temp.dtype)
-    # temp = temp * fc2w_scale
+    temp = temp * fc2w_scale
+    temp = temp.astype(int)
     temp = np.maximum(0, temp)
+    # temp = np.minimum(127 // fc2w_scale, temp)
+    # temp = temp * fc2w_scale
     
     temp = np.matmul(temp, fc3w)
     print('FC3 Output :', temp.shape, temp.dtype)
-    # temp = temp * fc3w_scale
+    temp = temp * fc3w_scale
     
     print(temp)
-    
-    temp = temp * fc1w_scale * fc2w_scale * fc3w_scale
 
+    # temp = temp * fc1w_scale * fc2w_scale * fc3w_scale
     print(temp)
 
     from scipy.special import softmax
@@ -148,10 +167,15 @@ def inference(path: str, inference_mode=None):
 
     return result
 
-
 if __name__ == '__main__':
 
-    # ret = inference('test_image/0.png', inference_mode=Inference.INT8) 
-    ret = inference('test_image/0.png', inference_mode=Inference.FP32) 
+
+    test_type = Inference.INT8 # Inference.INT8 or Inference.FP32
+
+    for i in range(10):
+        ret = inference('test_image/{}.png'.format(i), inference_mode=test_type) 
+        print(colored('{} {}'.format(ret, i), 'blue'))
+        assert ret == i
+
     print(ret)
 
