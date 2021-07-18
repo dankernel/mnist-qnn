@@ -12,7 +12,6 @@ NUMBER_LINE = '├━━━━━━━━━━━━━━━━━━━━�
 
 # Option 
 use_ReLU = True
-use_zp = True
 
 class Inference(Enum):
     FP32 = 1
@@ -55,12 +54,13 @@ def print_debug(layer: str, min: float, max: float, scale: float):
     print(NUMBER_LINE)
     print('')
 
-def quantization(path: str, num_bits: int=8):
+def quantization(path: str, num_bits: int=8, use_zp: bool=False):
     """
     Quantization
 
     :param str path: ndarray file path
     :param int num_bits: bits
+    :param bool use_zp: use zero point
     :returns: 
         - tensor - 
         - quantized_tensor - 
@@ -75,14 +75,17 @@ def quantization(path: str, num_bits: int=8):
     # Max, Min, Scale
     temp_max = np.max(tensor)
     temp_min = np.min(tensor)
-    scale = (temp_max - temp_min) / (2 ** (num_bits))
+    scale = (temp_max - temp_min) / (2 ** (num_bits - 1))
 
     # Print Debug
     if __debug__:
         print_debug('L1', temp_min, temp_max, scale)
 
-    zero_point = 0 -(temp_min // scale)
-    zero_point = zero_point.astype(np.int8)
+    if use_zp is True:
+        zero_point = 0 -(temp_min // scale)
+        zero_point = zero_point.astype(np.int8)
+    else:
+        zero_point = 0
 
     """
     Encoding zero point
@@ -96,14 +99,16 @@ def quantization(path: str, num_bits: int=8):
 
 def inference(path: str, inference_mode=None):
 
+    use_zp = False
+
     inp = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     inp = inp.reshape(-1)
     inp = inp.astype(np.int32)
 
     # Load tensor
-    fc1w, quantized_fc1w, fc1w_scale, fc1w_zp = quantization('mnist_dkdk_FP32_20170708_v1/FC1.npy')
-    fc2w, quantized_fc2w, fc2w_scale, fc2w_zp = quantization('mnist_dkdk_FP32_20170708_v1/FC2.npy')
-    fc3w, quantized_fc3w, fc3w_scale, fc3w_zp = quantization('mnist_dkdk_FP32_20170708_v1/FC3.npy')
+    fc1w, quantized_fc1w, fc1w_scale, fc1w_zp = quantization('mnist_dkdk_FP32_20170708_v1/FC1.npy', use_zp=use_zp)
+    fc2w, quantized_fc2w, fc2w_scale, fc2w_zp = quantization('mnist_dkdk_FP32_20170708_v1/FC2.npy', use_zp=use_zp)
+    fc3w, quantized_fc3w, fc3w_scale, fc3w_zp = quantization('mnist_dkdk_FP32_20170708_v1/FC3.npy', use_zp=use_zp)
 
     if __debug__:
         print('fc1w (FP32)   :', colored(fc1w[0][:5], 'red'))
@@ -132,31 +137,22 @@ def inference(path: str, inference_mode=None):
             fc2w -= fc2w_zp
             fc3w -= fc3w_zp
 
-    # print(colored(fc1w[0][:5] * fc1w_scale, 'red'))
-
     temp = np.matmul(inp, fc1w)
     print('FC1 Output :', temp.shape, temp.dtype)
     temp = temp * fc1w_scale
     temp = temp.astype(int)
     temp = np.maximum(0, temp)
-    #temp = np.minimum(127 // fc1w_scale, temp)
-    # temp = temp * fc1w_scale
 
     temp = np.matmul(temp, fc2w)
     print('FC2 Output :', temp.shape, temp.dtype)
     temp = temp * fc2w_scale
     temp = temp.astype(int)
     temp = np.maximum(0, temp)
-    # temp = np.minimum(127 // fc2w_scale, temp)
-    # temp = temp * fc2w_scale
     
     temp = np.matmul(temp, fc3w)
     print('FC3 Output :', temp.shape, temp.dtype)
     temp = temp * fc3w_scale
     
-    print(temp)
-
-    # temp = temp * fc1w_scale * fc2w_scale * fc3w_scale
     print(temp)
 
     from scipy.special import softmax
