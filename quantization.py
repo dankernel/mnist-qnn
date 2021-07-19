@@ -140,13 +140,17 @@ def inference(path: str, inference_mode=None):
     temp = np.matmul(inp, fc1w)
     print('FC1 Output :', temp.shape, temp.dtype)
     temp = temp * fc1w_scale
+    print(colored(temp[:5], 'cyan'))
     temp = temp.astype(int)
+    print(colored(temp[:5], 'cyan'))
     temp = np.maximum(0, temp)
 
     temp = np.matmul(temp, fc2w)
     print('FC2 Output :', temp.shape, temp.dtype)
     temp = temp * fc2w_scale
+    print(colored(temp[:5], 'cyan'))
     temp = temp.astype(int)
+    print(colored(temp[:5], 'cyan'))
     temp = np.maximum(0, temp)
     
     temp = np.matmul(temp, fc3w)
