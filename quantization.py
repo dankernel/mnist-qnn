@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 from enum import Enum
 import qnn_utils
-from termcolor import colored
+from termcolor import colored, cprint
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -100,6 +100,7 @@ def quantization(path: str, num_bits: int=8, use_zp: bool=False):
 def inference(path: str, inference_mode=None):
 
     use_zp = False
+    inference_scale_resize = True
 
     inp = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     inp = inp.reshape(-1)
@@ -139,23 +140,30 @@ def inference(path: str, inference_mode=None):
 
     temp = np.matmul(inp, fc1w)
     print('FC1 Output :', temp.shape, temp.dtype)
-    temp = temp * fc1w_scale
-    print(colored(temp[:5], 'cyan'))
-    temp = temp.astype(int)
-    print(colored(temp[:5], 'cyan'))
+    print(colored('FC1 out', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
+    if inference_scale_resize:
+        temp = temp * fc1w_scale
+        print(colored('* scale', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
+        temp = temp.astype(int)
+        print(colored('ast int', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
     temp = np.maximum(0, temp)
 
     temp = np.matmul(temp, fc2w)
     print('FC2 Output :', temp.shape, temp.dtype)
-    temp = temp * fc2w_scale
-    print(colored(temp[:5], 'cyan'))
-    temp = temp.astype(int)
-    print(colored(temp[:5], 'cyan'))
+    print(colored('FC2 out', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
+    if inference_scale_resize:
+        temp = temp * fc2w_scale
+        print(colored('* scale', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
+        temp = temp.astype(int)
+        print(colored('ast int', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
     temp = np.maximum(0, temp)
     
     temp = np.matmul(temp, fc3w)
     print('FC3 Output :', temp.shape, temp.dtype)
-    temp = temp * fc3w_scale
+    print(colored('FC3 out', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
+    if inference_scale_resize:
+        temp = temp * fc3w_scale
+        print(colored('* scale', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
     
     print(temp)
 
