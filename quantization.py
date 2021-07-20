@@ -54,6 +54,15 @@ def print_debug(layer: str, min: float, max: float, scale: float):
     print(NUMBER_LINE)
     print('')
 
+def get_scale(l: list, num_bits: int):
+
+    temp_max = np.max(l)
+    temp_min = np.min(l)
+    scale = (temp_max - temp_min) / (2 ** num_bits)
+
+    return scale
+
+
 def quantization(path: str, num_bits: int=8, use_zp: bool=False):
     """
     Quantization
@@ -97,6 +106,42 @@ def quantization(path: str, num_bits: int=8, use_zp: bool=False):
     quantized_tensor = quantized_tensor.astype(np.int8)
     return tensor, quantized_tensor, scale, zero_point
 
+def _matmul(a, b):
+
+    if __debug__:
+
+        a_shape = a.shape
+        b_shape = b.shape
+        if a.ndim <= 1:
+            a_shape = (1, a.shape[0])
+        if b.ndim <= 1:
+            b_shape = (1, b.shape[0])
+        c_shape = (a_shape[0], b_shape[1])
+        print('A   shape :', a_shape)
+        print('B   shape :', b_shape)
+        print('C   shape :', c_shape)
+        print('         {0:5}               {1:5}               {2:5}'.format(a_shape[1], b_shape[1], c_shape[1]))
+        print('      ┌──────┐         ┌─────────┐         ┌─────────┐')
+        print('      │      │         │         │         │         │')
+        print('{0:5} │      │ * {1:5} │         │ = {2:5} │         │'.format(a_shape[0], b_shape[0], c_shape[0]))
+        print('      │      │         │         │         │         │')
+        print('      └──────┘         └─────────┘         └─────────┘')
+
+    # matmul
+    ret = np.matmul(a, b)
+
+    # Get scale
+    temp_scale = get_scale([min(ret), max(ret)], 8)
+    print('temp_scale :', temp_scale, 1/temp_scale)
+
+    print(colored('FC1 out', 'green', 'on_yellow'), colored(ret[:5], 'cyan'))
+    ret = ret / temp_scale
+    print(colored('* scale', 'green', 'on_yellow'), colored(ret[:5], 'cyan'))
+    ret = ret.astype(int)
+    print(colored('ast int', 'green', 'on_yellow'), colored(ret[:5], 'cyan'))
+
+    return ret
+
 def inference(path: str, inference_mode=None):
 
     use_zp = False
@@ -138,32 +183,16 @@ def inference(path: str, inference_mode=None):
             fc2w -= fc2w_zp
             fc3w -= fc3w_zp
 
-    temp = np.matmul(inp, fc1w)
-    print('FC1 Output :', temp.shape, temp.dtype)
-    print(colored('FC1 out', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
-    if inference_scale_resize:
-        temp = temp * fc1w_scale
-        print(colored('* scale', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
-        temp = temp.astype(int)
-        print(colored('ast int', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
+    # FC1
+    temp = _matmul(inp, fc1w)
     temp = np.maximum(0, temp)
 
-    temp = np.matmul(temp, fc2w)
-    print('FC2 Output :', temp.shape, temp.dtype)
-    print(colored('FC2 out', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
-    if inference_scale_resize:
-        temp = temp * fc2w_scale
-        print(colored('* scale', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
-        temp = temp.astype(int)
-        print(colored('ast int', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
+    # FC2
+    temp = _matmul(temp, fc2w)
     temp = np.maximum(0, temp)
     
-    temp = np.matmul(temp, fc3w)
-    print('FC3 Output :', temp.shape, temp.dtype)
-    print(colored('FC3 out', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
-    if inference_scale_resize:
-        temp = temp * fc3w_scale
-        print(colored('* scale', 'green', 'on_yellow'), colored(temp[:5], 'cyan'))
+    # FC3
+    temp = _matmul(temp, fc3w)
     
     print(temp)
 
