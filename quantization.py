@@ -2,8 +2,9 @@
 import sys
 import numpy as np
 import cv2
-from enum import Enum
 import qnn_utils
+
+from enum import Enum
 from termcolor import colored, cprint
 
 np.set_printoptions(threshold=sys.maxsize)
@@ -109,7 +110,6 @@ def quantization(path: str, num_bits: int=8, use_zp: bool=False):
 def _matmul(a, b):
 
     if __debug__:
-
         a_shape = a.shape
         b_shape = b.shape
         if a.ndim <= 1:
@@ -117,18 +117,25 @@ def _matmul(a, b):
         if b.ndim <= 1:
             b_shape = (1, b.shape[0])
         c_shape = (a_shape[0], b_shape[1])
-        print('A   shape :', a_shape)
-        print('B   shape :', b_shape)
-        print('C   shape :', c_shape)
+        print('A   shape :{} dtype: {}'.format(a_shape, a.dtype))
+        print('B   shape :{} dtype: {}'.format(b_shape, b.dtype))
         print('         {0:5}               {1:5}               {2:5}'.format(a_shape[1], b_shape[1], c_shape[1]))
         print('      ┌──────┐         ┌─────────┐         ┌─────────┐')
         print('      │      │         │         │         │         │')
         print('{0:5} │      │ * {1:5} │         │ = {2:5} │         │'.format(a_shape[0], b_shape[0], c_shape[0]))
         print('      │      │         │         │         │         │')
         print('      └──────┘         └─────────┘         └─────────┘')
+        print('')
+        print('A :', a[:5], '...', a[20:23])
+        print('B :', b[0][:5], '...', b[0][20:23])
 
     # matmul
     ret = np.matmul(a, b)
+
+    if __debug__:
+        print('C   shape :{} dtype: {}'.format(ret.shape, ret.dtype))
+        print('min : {} max : {}'.format(min(ret), max(ret)))
+        print('C :', ret[:5])
 
     # Get scale
     temp_scale = get_scale([min(ret), max(ret)], 8)
@@ -168,11 +175,10 @@ def inference(path: str, inference_mode=None):
 
     if inference_mode == Inference.INT8:
 
-        """
         qnn_utils.ndarray_to_bin(quantized_fc1w, './bin/FC1.bin')
         qnn_utils.ndarray_to_bin(quantized_fc2w, './bin/FC2.bin')
         qnn_utils.ndarray_to_bin(quantized_fc3w, './bin/FC3.bin')
-        """
+
         # zero point calibration (decoding)
         fc1w = quantized_fc1w
         fc2w = quantized_fc2w
