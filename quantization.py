@@ -126,8 +126,8 @@ def _matmul(a, b):
         print('      │      │         │         │         │         │')
         print('      └──────┘         └─────────┘         └─────────┘')
         print('')
-        print('A :', a[:5], '...', a[20:23])
-        print('B :', b[0][:5], '...', b[0][20:23])
+        print('A :', a[:5], '...')
+        print('B :', b[0][:5], '...')
 
     # matmul
     ret = np.matmul(a, b)
@@ -155,8 +155,9 @@ def inference(path: str, inference_mode=None):
     inference_scale_resize = True
 
     inp = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-    inp = inp.reshape(-1)
+    inp = inp.reshape(784)
     inp = inp.astype(np.int32)
+    print('inp shape :', inp.shape)
 
     # Load tensor
     fc1w, quantized_fc1w, fc1w_scale, fc1w_zp = quantization('mnist_dkdk_FP32_20170708_v1/FC1.npy', use_zp=use_zp)
@@ -215,7 +216,7 @@ if __name__ == '__main__':
 
     test_type = Inference.INT8 # Inference.INT8 or Inference.FP32
 
-    for i in range(10):
+    for i in range(1):
         ret = inference('test_image/{}.png'.format(i), inference_mode=test_type) 
         print(colored('{} {}'.format(ret, i), 'blue'))
         assert ret == i
