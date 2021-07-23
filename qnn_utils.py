@@ -12,9 +12,11 @@ def ndarray_to_bin(ndarray, out_path: str):
 
     with open(out_path, 'wb') as file:
         dim = len(ndarray.shape)
+        print('dim :', dim)
         file.write(dim.to_bytes(4, byteorder='little', signed=True))
         for s in range(dim):
             size = ndarray.shape[s]
+            print('size :', size)
             file.write(size.to_bytes(4, byteorder='little', signed=True))
         file.write(ndarray.tobytes())
  

@@ -109,6 +109,8 @@ def quantization(path: str, num_bits: int=8, use_zp: bool=False):
 
 def _matmul(a, b):
 
+    print(a)
+
     if __debug__:
         a_shape = a.shape
         b_shape = b.shape
@@ -119,15 +121,19 @@ def _matmul(a, b):
         c_shape = (a_shape[0], b_shape[1])
         print('A   shape :{} dtype: {}'.format(a_shape, a.dtype))
         print('B   shape :{} dtype: {}'.format(b_shape, b.dtype))
-        print('         {0:5}               {1:5}               {2:5}'.format(a_shape[1], b_shape[1], c_shape[1]))
-        print('      ┌──────┐         ┌─────────┐         ┌─────────┐')
-        print('      │      │         │         │         │         │')
-        print('{0:5} │      │ * {1:5} │         │ = {2:5} │         │'.format(a_shape[0], b_shape[0], c_shape[0]))
-        print('      │      │         │         │         │         │')
-        print('      └──────┘         └─────────┘         └─────────┘')
+        print('                  {0:5}                      {1:5}               {2:5}'.format(a_shape[1], b_shape[1], c_shape[1]))
+        print('      ┌───────────────┐         ┌────────────────┐         ┌─────────┐')
+        print('      │ {:02x} {:02x} {:02x}  ... │         │ {:02x} {:02x} {:02x}   ... │         │         │'.format(10, 20, 30, 40, 50, 60))
+        print('      │ {:02x} {:02x} {:02x}  ... │ *       │ {:02x} {:02x} {:02x}   ... │ =       │         │'.format(10, 20, 30, 10, 20, 30))
+        print('      │ {:02x} {:02x} {:02x}  ... │         │ {:02x} {:02x} {:02x}   ... │         │         │'.format(11, 12, 13, 14, 15, 16))
+        print('      │ .. .. ..  ... │         │ .. .. ..   ... │         │         │'.format(11, 12, 13, 14, 15, 16))
+        print(' {:4} └───────────────┘    {:4} └────────────────┘    {:4} └─────────┘'.format(a_shape[0],  b_shape[0], c_shape[0]))
         print('')
-        print('A :', a[:5], '...')
-        print('B :', b[0][:5], '...')
+
+        """
+        for i in range(145, 155):
+            print(i, a[i])
+        """
 
     # matmul
     ret = np.matmul(a, b)
