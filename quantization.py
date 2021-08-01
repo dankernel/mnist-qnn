@@ -107,6 +107,43 @@ def quantization(path: str, num_bits: int=8, use_zp: bool=False):
     quantized_tensor = quantized_tensor.astype(np.int8)
     return tensor, quantized_tensor, scale, zero_point
 
+def print_debug_hex(a, b, c):
+
+    if a.ndim != 2 or b.ndim != 2 or c.ndim != 2:
+        print('Only 2 dim')
+        return
+
+    ashape = a.shape
+    bshape = b.shape
+    cshape = c.shape
+    print(ashape)
+    print(bshape)
+    print(cshape)
+
+    msg = []
+    msg.append('                 xxx                    xxx                     xxx ')
+    msg.append('     ┌──────────────┐       ┌──────────────┐        ┌──────────────┐')
+    msg.append('     │ xx xx xx ... │       │ xx xx xx ... │        │ xx xx xx ... │')
+    msg.append('     │ xx xx xx ... │ *     │ xx xx xx ... │ =      │ xx xx xx ... │')
+    msg.append('     │ xx xx xx ... │       │ xx xx xx ... │        │ xx xx xx ... │')
+    msg.append('     │ .. .. .. ... │       │ .. .. .. ... │        │ .. .. .. ... │')
+    msg.append(' xxx └──────────────┘   xxx └──────────────┘    xxx └──────────────┘')
+
+    for i in range(len(msg)):
+        msg[i] = msg[i].replace('xxx', '{:03}')
+        msg[i] = msg[i].replace('xx', '{:02x}')
+
+    """
+    print(msg[0].format(ashape[1], bshape[1], cshape[1]))
+    print(msg[1])
+    print(msg[2].format(a[0][0], a[0][1], a[0][2], b[0][0], b[0][1], b[0][2], c[0][0], c[0][1], c[0][2]))
+    print(msg[3].format(a[1][0], a[1][1], a[1][2], b[1][0], b[1][1], b[1][2], c[1][0], c[1][1], c[1][2]))
+    print(msg[4].format(a[2][0], a[2][1], a[2][2], b[2][0], b[2][1], b[2][2], c[2][0], c[2][1], c[2][2]))
+    print(msg[5])
+    print(msg[6].format(ashape[0], bshape[0], cshape[0]))
+    """
+
+
 def _matmul(a, b):
 
     print(a)
@@ -122,12 +159,12 @@ def _matmul(a, b):
         print('A   shape :{} dtype: {}'.format(a_shape, a.dtype))
         print('B   shape :{} dtype: {}'.format(b_shape, b.dtype))
         print('                  {0:5}                      {1:5}               {2:5}'.format(a_shape[1], b_shape[1], c_shape[1]))
-        print('      ┌───────────────┐         ┌────────────────┐         ┌─────────┐')
-        print('      │ {:02x} {:02x} {:02x}  ... │         │ {:02x} {:02x} {:02x}   ... │         │         │'.format(10, 20, 30, 40, 50, 60))
-        print('      │ {:02x} {:02x} {:02x}  ... │ *       │ {:02x} {:02x} {:02x}   ... │ =       │         │'.format(10, 20, 30, 10, 20, 30))
-        print('      │ {:02x} {:02x} {:02x}  ... │         │ {:02x} {:02x} {:02x}   ... │         │         │'.format(11, 12, 13, 14, 15, 16))
-        print('      │ .. .. ..  ... │         │ .. .. ..   ... │         │         │'.format(11, 12, 13, 14, 15, 16))
-        print(' {:4} └───────────────┘    {:4} └────────────────┘    {:4} └─────────┘'.format(a_shape[0],  b_shape[0], c_shape[0]))
+        print('      ┌───────────────┐         ┌────────────────┐         ┌─── ─── ─ ────┐')
+        print('      │ {:02x} {:02x} {:02x}  ... │         │ {:02x} {:02x} {:02x}   ... │         │ {:02x} {:02x} {:02x} ... │'.format(10, 20, 30, 40, 50, 60, 100, 101, 102))
+        print('      │ {:02x} {:02x} {:02x}  ... │ *       │ {:02x} {:02x} {:02x}   ... │ =       │ {:02x} {:02x} {:02x} ... │'.format(10, 20, 30, 10, 20, 30, 110, 111, 112))
+        print('      │ {:02x} {:02x} {:02x}  ... │         │ {:02x} {:02x} {:02x}   ... │         │ {:02x} {:02x} {:02x} ... │'.format(11, 12, 13, 14, 15, 16, 120, 121, 122))
+        print('      │ .. .. ..  ... │         │ .. .. ..   ... │         │ .. .. .. ... │'.format(11, 12, 13, 14, 15, 16))
+        print(' {:4} └───────────────┘    {:4} └────────────────┘    {:4} └───────── ─ ──┘'.format(a_shape[0],  b_shape[0], c_shape[0]))
         print('')
 
         """
@@ -137,6 +174,7 @@ def _matmul(a, b):
 
     # matmul
     ret = np.matmul(a, b)
+    print_debug_hex(a, b, ret)
 
     if __debug__:
         print('C   shape :{} dtype: {}'.format(ret.shape, ret.dtype))
@@ -147,11 +185,11 @@ def _matmul(a, b):
     temp_scale = get_scale([min(ret), max(ret)], 8)
     print('temp_scale :', temp_scale, 1/temp_scale)
 
-    print(colored('FC1 out', 'green', 'on_yellow'), colored(ret[:5], 'cyan'))
+    print(colored('FC1 out', 'green', 'on_yellow'), colored(ret[0][:5], 'cyan'))
     ret = ret / temp_scale
-    print(colored('* scale', 'green', 'on_yellow'), colored(ret[:5], 'cyan'))
+    print(colored('* scale', 'green', 'on_yellow'), colored(ret[0][:5], 'cyan'))
     ret = ret.astype(int)
-    print(colored('ast int', 'green', 'on_yellow'), colored(ret[:5], 'cyan'))
+    print(colored('ast int', 'green', 'on_yellow'), colored(ret[0][:5], 'cyan'))
 
     return ret
 
@@ -161,7 +199,7 @@ def inference(path: str, inference_mode=None):
     inference_scale_resize = True
 
     inp = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-    inp = inp.reshape(784)
+    inp = inp.reshape(1, 784)
     inp = inp.astype(np.int32)
     print('inp shape :', inp.shape)
 
