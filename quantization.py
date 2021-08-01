@@ -109,32 +109,60 @@ def quantization(path: str, num_bits: int=8, use_zp: bool=False):
 
 def print_debug_hex(a, b, c):
 
+
     if a.ndim != 2 or b.ndim != 2 or c.ndim != 2:
         print('Only 2 dim')
         return
 
-    ashape = a.shape
-    bshape = b.shape
-    cshape = c.shape
-    print(ashape)
-    print(bshape)
-    print(cshape)
+    print('a', a.shape, a.dtype)
+    print('b', b.shape, b.dtype)
+    print('c', c.shape, c.dtype)
+
+    a_uint8 = a.view(dtype=np.uint8)
+    b_uint8 = b.view(dtype=np.uint8)
+    c_uint8 = c.view(dtype=np.uint8)
+
+    print('a', a_uint8.shape, a.dtype)
+    print('b', b_uint8.shape, b.dtype)
+    print('c', c_uint8.shape, c.dtype)
+
+    a = a_uint8
+    b = b_uint8
+    c = c_uint8
 
     msg = []
-    msg.append('                 xxx                    xxx                     xxx ')
-    msg.append('     ┌──────────────┐       ┌──────────────┐        ┌──────────────┐')
-    msg.append('     │ xx xx xx ... │       │ xx xx xx ... │        │ xx xx xx ... │')
-    msg.append('     │ xx xx xx ... │ *     │ xx xx xx ... │ =      │ xx xx xx ... │')
-    msg.append('     │ xx xx xx ... │       │ xx xx xx ... │        │ xx xx xx ... │')
-    msg.append('     │ .. .. .. ... │       │ .. .. .. ... │        │ .. .. .. ... │')
-    msg.append(' xxx └──────────────┘   xxx └──────────────┘    xxx └──────────────┘')
+    msg.append('                         xxx                            xxx                             xxx ')
+    msg.append('     ┌──────────────────────┐       ┌──────────────────────┐        ┌──────────────────────┐')
+    msg.append('     │ xx xx xx xx xx xx .. │       │ xx xx xx xx xx xx .. │        │ xx xx xx xx xx xx .. │')
+    msg.append('     │ xx xx xx xx xx xx .. │ *     │ xx xx xx xx xx xx .. │ =      │ xx xx xx xx xx xx .. │')
+    msg.append('     │ xx xx xx xx xx xx .. │       │ xx xx xx xx xx xx .. │        │ xx xx xx xx xx xx .. │')
+    msg.append('     │ xx xx xx xx xx xx .. │       │ xx xx xx xx xx xx .. │        │ xx xx xx xx xx xx .. │')
+    msg.append('     │ .. .. .. .. .. .. .. │       │ .. .. .. .. .. .. .. │        │ .. .. .. .. .. .. .. │')
+    msg.append(' xxx └──────────────────────┘   xxx └──────────────────────┘    xxx └──────────────────────┘')
 
-    for i in range(len(msg)):
-        msg[i] = msg[i].replace('xxx', '{:03}')
-        msg[i] = msg[i].replace('xx', '{:02x}')
+    val = [a, b, c]
 
+    for row in range(len(msg)):
+        msg[row] = msg[row].replace('xxx', '{:03}')
+
+        for v in range(3):
+            temp = val[v]
+            for k in range(6):
+                if 1 < row  and row - 2 < temp.shape[0] and k < temp.shape[1]:
+                    msg[row] = msg[row].replace('xx', '{:02x}'.format(temp[row-2][k]), 1)
+                else:
+                    msg[row] = msg[row].replace('xx', '--', 1)
+
+    print(msg[0].format(a.shape[1], b.shape[1], c.shape[1]))
+    print(msg[1])
+    print(msg[2])
+    print(msg[3])
+    print(msg[4])
+    print(msg[5])
+    print(msg[6])
+    print(msg[7].format(a.shape[0], b.shape[0], c.shape[0]))
     """
-    print(msg[0].format(ashape[1], bshape[1], cshape[1]))
+    print(msg[0].format(a.shape[1], b.shape[1], c.shape[1]))
     print(msg[1])
     print(msg[2].format(a[0][0], a[0][1], a[0][2], b[0][0], b[0][1], b[0][2], c[0][0], c[0][1], c[0][2]))
     print(msg[3].format(a[1][0], a[1][1], a[1][2], b[1][0], b[1][1], b[1][2], c[1][0], c[1][1], c[1][2]))
