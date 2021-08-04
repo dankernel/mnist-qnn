@@ -109,22 +109,13 @@ def quantization(path: str, num_bits: int=8, use_zp: bool=False):
 
 def print_debug_hex(a, b, c):
 
-
     if a.ndim != 2 or b.ndim != 2 or c.ndim != 2:
         print('Only 2 dim')
         return
 
-    print('a', a.shape, a.dtype)
-    print('b', b.shape, b.dtype)
-    print('c', c.shape, c.dtype)
-
     a_uint8 = a.view(dtype=np.uint8)
     b_uint8 = b.view(dtype=np.uint8)
     c_uint8 = c.view(dtype=np.uint8)
-
-    print('a', a_uint8.shape, a.dtype)
-    print('b', b_uint8.shape, b.dtype)
-    print('c', c_uint8.shape, c.dtype)
 
     a = a_uint8
     b = b_uint8
@@ -161,15 +152,6 @@ def print_debug_hex(a, b, c):
     print(msg[5])
     print(msg[6])
     print(msg[7].format(a.shape[0], b.shape[0], c.shape[0]))
-    """
-    print(msg[0].format(a.shape[1], b.shape[1], c.shape[1]))
-    print(msg[1])
-    print(msg[2].format(a[0][0], a[0][1], a[0][2], b[0][0], b[0][1], b[0][2], c[0][0], c[0][1], c[0][2]))
-    print(msg[3].format(a[1][0], a[1][1], a[1][2], b[1][0], b[1][1], b[1][2], c[1][0], c[1][1], c[1][2]))
-    print(msg[4].format(a[2][0], a[2][1], a[2][2], b[2][0], b[2][1], b[2][2], c[2][0], c[2][1], c[2][2]))
-    print(msg[5])
-    print(msg[6].format(ashape[0], bshape[0], cshape[0]))
-    """
 
 
 def _matmul(a, b):
@@ -194,11 +176,6 @@ def _matmul(a, b):
         print('      │ .. .. ..  ... │         │ .. .. ..   ... │         │ .. .. .. ... │'.format(11, 12, 13, 14, 15, 16))
         print(' {:4} └───────────────┘    {:4} └────────────────┘    {:4} └───────── ─ ──┘'.format(a_shape[0],  b_shape[0], c_shape[0]))
         print('')
-
-        """
-        for i in range(145, 155):
-            print(i, a[i])
-        """
 
     # matmul
     ret = np.matmul(a, b)
@@ -285,10 +262,9 @@ def inference(path: str, inference_mode=None):
 
 if __name__ == '__main__':
 
-
     test_type = Inference.INT8 # Inference.INT8 or Inference.FP32
 
-    for i in range(1):
+    for i in range(10):
         ret = inference('test_image/{}.png'.format(i), inference_mode=test_type) 
         print(colored('{} {}'.format(ret, i), 'blue'))
         assert ret == i
