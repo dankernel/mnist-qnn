@@ -25,28 +25,41 @@ def ndarray_to_bin(ndarray, out_path: str):
         file.write(ndarray.tobytes())
  
 
-def print_debug_hex(array):
+def print_debug_hex(input_array):
     """
     Print HEX
 
     :param np.ndarray array: input array
     :return: None
     """
+    array = input_array.view(dtype=np.uint8)
 
     terminal_rows, terminal_columns = map(int, os.popen('stty size', 'r').read().split())
 
     print_hex_rows = min(array.shape[0] - 1, terminal_rows - 5)
     print_hex_columns = min(array.shape[1] - 1, (terminal_columns - 16) // 3)
+
+    if input_array.dtype == np.int8 or input_array.dtype == np.uint8:
+        print_hex_columns -= (print_hex_columns + 1) % 2
+    elif input_array.dtype == np.int16 or input_array.dtype == np.uint16:
+        print_hex_columns -= (print_hex_columns + 1) % 4
+
     rows_omitted = array.shape[0] - 1 > terminal_rows - 5
     columns_omitted = array.shape[1] - 1 > (terminal_columns - 16) // 3
+
+    if __debug__:
+        print('print_hex_rows :', print_hex_rows)
+        print('print_hex_columns :', print_hex_columns)
+        print('rows_omitted :', rows_omitted)
+        print('columns_omitted :', columns_omitted)
 
     msgs = []
     # ..........0.........1....
     # ..........01234567890123
-    msgs.append('        dd xxxx ') # 0
+    msgs.append('        dd dddd ') # 0
     msgs.append('      ┌────┐') # 1
     msgs.append('   dd │ xx │') # 2
-    msgs.append(' xxxx └────┘') # 3
+    msgs.append(' dddd └────┘') # 3
 
     # columns(X-axis) extend
     for i in range(len(msgs)):
@@ -63,8 +76,17 @@ def print_debug_hex(array):
         msgs.insert(2, msgs[2])
 
     for i in range(len(msgs)):
-        msgs[i] = msgs[i].replace('xxxx', colored('{:4}', 'green'))
-        msgs[i] = msgs[i].replace('xx', '{:02x}')
+        # dddd -> {:4} 
+        msgs[i] = msgs[i].replace('dddd', colored('{:4}', 'green'))
+
+        # xx -> {:02X}
+        if input_array.dtype == np.int8 or input_array.dtype == np.uint8:
+            temp = colored('{:02X} ', 'green') + colored('{:02X}', 'red')
+            msgs[i] = msgs[i].replace('xx xx', temp)
+        elif input_array.dtype == np.int16 or input_array.dtype == np.uint16:
+            temp = colored('{:02X} {:02X} ', 'green') + colored('{:02X} {:02X}', 'red')
+            msgs[i] = msgs[i].replace('xx xx xx xx', temp)
+
         msgs[i] = msgs[i].replace('dd', '{:02}')
 
     # print all
@@ -84,7 +106,8 @@ def print_debug_hex(array):
 
 def test():
 
-    array = np.random.randint(10, size=(5, 3000), dtype=np.uint8)
+    # array = np.random.randint(0xFF, size=(500, 3000), dtype=np.uint8)
+    array = np.random.randint(0xFFFF, size=(500, 3000), dtype=np.uint16)
     print(array)
     print_debug_hex(array)
     pass
