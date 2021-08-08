@@ -44,14 +44,14 @@ def print_debug_hex(input_array):
     elif input_array.dtype == np.int16 or input_array.dtype == np.uint16:
         print_hex_columns -= (print_hex_columns + 1) % 4
 
-    rows_omitted = array.shape[0] - 1 > terminal_rows - 5
-    columns_omitted = array.shape[1] - 1 > (terminal_columns - 16) // 3
+    is_omitted_rows = array.shape[0] - 1 > terminal_rows - 5
+    is_omitted_columns = array.shape[1] - 1 > (terminal_columns - 16) // 3
 
     if __debug__:
         print('print_hex_rows :', print_hex_rows)
         print('print_hex_columns :', print_hex_columns)
-        print('rows_omitted :', rows_omitted)
-        print('columns_omitted :', columns_omitted)
+        print('is_omitted_rows :', is_omitted_rows)
+        print('is_omitted_columns :', is_omitted_columns)
 
     msgs = []
     # ..........0.........1....
@@ -80,6 +80,7 @@ def print_debug_hex(input_array):
         msgs[i] = msgs[i].replace('dddd', colored('{:4}', 'green'))
 
         # xx -> {:02X}
+        # xx xx -> {:02X} {:02X}
         if input_array.dtype == np.int8 or input_array.dtype == np.uint8:
             temp = colored('{:02X} ', 'green') + colored('{:02X}', 'red')
             msgs[i] = msgs[i].replace('xx xx', temp)
@@ -87,20 +88,31 @@ def print_debug_hex(input_array):
             temp = colored('{:02X} {:02X} ', 'green') + colored('{:02X} {:02X}', 'red')
             msgs[i] = msgs[i].replace('xx xx xx xx', temp)
 
+        # dd -> {:02}
         msgs[i] = msgs[i].replace('dd', '{:02}')
 
     # print all
     for i in range(len(msgs)):
         if i == 0:
+            # columns index
             temp = list(range(print_hex_columns + 1))
             tepm = temp.append(array.shape[1])
             print(msgs[i].format(*temp))
         elif i == len(msgs) - 1:
+            # rows index
             print(msgs[i].format(array.shape[0]))
         else:
-            temp = list(array[i-2])
-            tepm = temp.insert(0, i - 2)
-            print(msgs[i].format(*temp))
+            # data
+            if is_omitted_columns:
+                temp = list(array[i-2])
+                tepm = temp.insert(0, i - 2)
+                print(msgs[i].format(*temp))
+            else:
+                temp = list(array[i-2])
+                tepm = temp.insert(0, i - 2)
+                print(msgs[i].format(*temp))
+
+
 
     return
 
