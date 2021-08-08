@@ -84,7 +84,7 @@ def print_debug_hex(array):
 
 def test():
 
-    array = np.random.randint(10, size=(2000, 3000), dtype=np.uint8)
+    array = np.random.randint(10, size=(5, 3000), dtype=np.uint8)
     print(array)
     print_debug_hex(array)
     pass
