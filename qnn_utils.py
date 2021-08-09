@@ -112,8 +112,6 @@ def print_debug_hex(input_array):
                 tepm = temp.insert(0, i - 2)
                 print(msgs[i].format(*temp))
 
-
-
     return
 
 def test():
