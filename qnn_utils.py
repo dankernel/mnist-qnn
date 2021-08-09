@@ -44,14 +44,14 @@ def print_debug_hex(input_array):
     elif input_array.dtype == np.int16 or input_array.dtype == np.uint16:
         print_hex_columns -= (print_hex_columns + 1) % 4
 
-    is_omitted_rows = array.shape[0] - 1 > terminal_rows - 5
-    is_omitted_columns = array.shape[1] - 1 > (terminal_columns - 16) // 3
+    is_ellipsis_rows = array.shape[0] - 1 > terminal_rows - 5
+    is_ellipsis_columns = array.shape[1] - 1 > (terminal_columns - 16) // 3
 
     if __debug__:
         print('print_hex_rows :', print_hex_rows)
         print('print_hex_columns :', print_hex_columns)
-        print('is_omitted_rows :', is_omitted_rows)
-        print('is_omitted_columns :', is_omitted_columns)
+        print('is_ellipsis_rows :', is_ellipsis_rows)
+        print('is_ellipsis_columns :', is_ellipsis_columns)
 
     msgs = []
     # ..........0.........1....
@@ -92,6 +92,7 @@ def print_debug_hex(input_array):
         msgs[i] = msgs[i].replace('dd', '{:02}')
 
     # print all
+    ellipsis_line = -3
     for i in range(len(msgs)):
         if i == 0:
             # columns index
@@ -103,10 +104,22 @@ def print_debug_hex(input_array):
             print(msgs[i].format(array.shape[0]))
         else:
             # data
-            if is_omitted_columns:
-                temp = list(array[i-2])
-                tepm = temp.insert(0, i - 2)
-                print(msgs[i].format(*temp))
+            if is_ellipsis_columns:
+                if len(msgs) + ellipsis_line - 1 == i:
+                    # ellipsis line ('..')
+                    msgs[i] = msgs[i].replace('{:02X}', '..')
+                    tepm = temp.insert(0, i - 2) # index
+                    print(msgs[i].format(*temp))
+                elif len(msgs) + ellipsis_line - 2 < i:
+                    # afterword (-n)
+                    temp = list(array[i - print_hex_rows - 3]) # Hex datas
+                    tepm = temp.insert(0, i - print_hex_rows - 3) # index
+                    print(msgs[i].format(*temp))
+                else:
+                    # general data (+n)
+                    temp = list(array[i-2]) # Hex datas
+                    tepm = temp.insert(0, i - 2) # index
+                    print(msgs[i].format(*temp))
             else:
                 temp = list(array[i-2])
                 tepm = temp.insert(0, i - 2)
