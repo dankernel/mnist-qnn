@@ -129,8 +129,18 @@ def print_debug_hex(input_array):
 
 def test():
 
-    # array = np.random.randint(0xFF, size=(500, 3000), dtype=np.uint8)
-    array = np.random.randint(0xFFFF, size=(500, 3000), dtype=np.uint16)
+    # test mode
+    TEST_MODE = 'NPY' # INT8 / INT16 / NPY
+    
+    # Init or Load
+    if TEST_MODE == 'INT8':
+        array = np.random.randint(0xFF, size=(500, 3000), dtype=np.uint8)
+    elif TEST_MODE == 'INT16':
+        array = np.random.randint(0xFFFF, size=(500, 3000), dtype=np.uint16)
+    elif TEST_MODE == 'NPY':
+        array = np.load('bin/FC1.npy')
+
+    # Test
     print(array)
     print_debug_hex(array)
     pass
